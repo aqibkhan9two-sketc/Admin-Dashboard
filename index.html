@@ -10,22 +10,14 @@
     <style>
         :root { --primary: #0f172a; --accent: #3b82f6; --success: #10b981; --bg: #f1f5f9; }
         body { background-color: var(--bg); font-family: 'Segoe UI', sans-serif; color: #334155; }
-        
-        /* Login Overlay Style */
-        #adminLogin {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--primary); z-index: 10000;
-            display: flex; align-items: center; justify-content: center;
-        }
+        #adminLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary); z-index: 10000; display: flex; align-items: center; justify-content: center; }
         .login-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; }
-
         .navbar { background: var(--primary); padding: 15px 0; border-bottom: 3px solid var(--accent); }
         .card { border: none; border-radius: 15px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); }
         .stat-card { background: white; border-left: 5px solid var(--accent); }
         .stat-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
         .status-badge { padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
         .bg-active { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-        .bg-idle { background: #fef9c3; color: #a16207; border: 1px solid #fef08a; }
         .bg-offline { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
         .bg-never { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
     </style>
@@ -36,7 +28,6 @@
         <div class="login-card shadow-lg">
             <i class="fas fa-lock fa-3x text-primary mb-3"></i>
             <h4 class="fw-bold">Admin Access</h4>
-            <p class="text-muted small">Enter password to view dashboard</p>
             <input type="password" id="adminPassInput" class="form-control text-center mb-3" placeholder="Enter Password">
             <button class="btn btn-primary w-100" onclick="verifyAdmin()">Unlock Dashboard</button>
             <p id="loginError" class="text-danger small mt-2" style="display:none;">Invalid Password!</p>
@@ -48,45 +39,49 @@
             <div class="container">
                 <a class="navbar-brand" href="#"><i class="fas fa-user-shield me-2 text-info"></i>WORK TRACKER <span class="text-info">PRO</span></a>
                 <div class="d-flex gap-2">
-                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal"><i class="fas fa-plus-circle me-1"></i> Add New Staff</button>
-                    <button class="btn btn-outline-light" onclick="downloadFilteredCSV()"><i class="fas fa-download"></i> CSV</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">Add Staff</button>
+                    <button class="btn btn-outline-light" onclick="downloadFilteredCSV()">CSV</button>
                 </div>
             </div>
         </nav>
 
         <div class="container mt-4">
             <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card stat-card p-3 mb-3">
-                        <div class="d-flex justify-content-between text-muted fw-bold"><span>Active Now</span><i class="fas fa-signal text-success"></i></div>
-                        <div class="stat-val" id="activeCount">0</div>
+                <div class="col-md-4"><div class="card stat-card p-3 mb-3"><span>Active Now</span><div class="stat-val" id="activeCount">0</div></div></div>
+                <div class="col-md-4"><div class="card stat-card p-3 mb-3" style="border-left-color: #64748b;"><span>Total Staff</span><div class="stat-val" id="totalStaffCount">0</div></div></div>
+                <div class="col-md-4"><div class="card stat-card p-3 mb-3" style="border-left-color: var(--success);"><span>Last Sync</span><div class="stat-val" id="lastSyncGlobal" style="font-size: 1.2rem;">--:--</div></div></div>
+            </div>
+
+            <div class="card p-3 mb-3 border-0 shadow-sm">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                            <input type="text" id="nameSearch" autocomplete="off" class="form-control border-start-0" placeholder="Search by Staff ID..." onkeyup="render()">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card stat-card p-3 mb-3" style="border-left-color: #64748b;">
-                        <div class="d-flex justify-content-between text-muted fw-bold"><span>Total Staff</span><i class="fas fa-users"></i></div>
-                        <div class="stat-val" id="totalStaffCount">0</div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-calendar"></i></span>
+                            <input type="date" id="historyDate" class="form-control border-start-0" onchange="render()">
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card stat-card p-3 mb-3" style="border-left-color: var(--success);">
-                        <div class="d-flex justify-content-between text-muted fw-bold"><span>System Sync</span><i class="fas fa-clock text-primary"></i></div>
-                        <div class="stat-val" id="lastSyncGlobal" style="font-size: 1.5rem; margin-top: 10px;">--:--</div>
+                    <div class="col-md-4">
+                        <select id="statusFilter" class="form-select" onchange="render()">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="offline">Offline</option>
+                            <option value="never">Never Logged In</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             <div class="card p-4 shadow-sm border-0 mb-5">
-                <h5 class="mb-4"><i class="fas fa-table me-2 text-primary"></i>Live Staff Activity</h5>
                 <div class="table-responsive">
                     <table class="table hover">
                         <thead>
-                            <tr>
-                                <th>Staff ID</th>
-                                <th>Status</th>
-                                <th>Time Worked</th>
-                                <th class="text-end">Last Update</th>
-                            </tr>
+                            <tr><th>Staff ID</th><th>Status</th><th>Worked</th><th class="text-end">Last Update</th></tr>
                         </thead>
                         <tbody id="attendanceTable"></tbody>
                     </table>
@@ -95,25 +90,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="addStaffModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Register New Staff</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <input type="text" id="newStaffID" class="form-control mb-3" placeholder="Staff ID">
-                    <select id="shiftLimitSelect" class="form-select mb-3">
-                        <option value="32400">9 Hours (Standard)</option>
-                        <option value="21600">6 Hours</option>
-                        <option value="36000">10 Hours</option>
-                    </select>
-                    <button class="btn btn-primary w-100" onclick="addNewStaff()">Save to Cloud</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="addStaffModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title">New Staff</h5><button class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="text" id="newStaffID" class="form-control mb-3" placeholder="ID"><button class="btn btn-primary w-100" onclick="addNewStaff()">Save</button></div></div></div></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -123,25 +100,22 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- PASSWORD PROTECTION LOGIC ---
-        const CORRECT_PASSWORD = "admin123"; // IDHAR APNA PASSWORD BADLEIN
+        const CORRECT_PASSWORD = "admin123";
+        let registeredStaff = [];
+        let attendanceRecords = [];
+
+        // Set default date to Today
+        document.getElementById('historyDate').valueAsDate = new Date();
 
         window.verifyAdmin = () => {
-            const pass = document.getElementById('adminPassInput').value;
-            if(pass === CORRECT_PASSWORD) {
+            if(document.getElementById('adminPassInput').value === CORRECT_PASSWORD) {
                 document.getElementById('adminLogin').style.display = 'none';
                 document.getElementById('mainDashboard').style.display = 'block';
                 startLiveSync();
-            } else {
-                document.getElementById('loginError').style.display = 'block';
-            }
+            } else { document.getElementById('loginError').style.display = 'block'; }
         };
 
-        // Baki ka purana data sync logic yahan function mein wrap kiya hai
         function startLiveSync() {
-            let registeredStaff = [];
-            let attendanceRecords = [];
-
             onSnapshot(collection(db, "settings"), (snap) => {
                 registeredStaff = [];
                 snap.forEach(d => registeredStaff.push({ id: d.id, ...d.data() }));
@@ -154,52 +128,60 @@
                 snap.forEach(d => attendanceRecords.push({ docId: d.id, ...d.data() }));
                 render();
             });
-
-            function render() {
-                const today = new Date().toISOString().split('T')[0];
-                const now = new Date();
-                const tableData = registeredStaff.map(staff => {
-                    const record = attendanceRecords.find(r => r.docId.startsWith(staff.id + "_") && r.docId.includes(today));
-                    let status = record ? record.status : "never";
-                    let lastSeen = record?.lastUpdate ? record.lastUpdate.toDate() : null;
-                    if (status === "active" && lastSeen && (now - lastSeen) > 300000) status = "offline";
-                    return { id: staff.id, status, seconds: record ? record.totalSeconds : 0, lastSeen };
-                });
-
-                document.getElementById('activeCount').innerText = tableData.filter(r => r.status === 'active').length;
-                document.getElementById('attendanceTable').innerHTML = tableData.map(r => `
-                    <tr>
-                        <td><strong>${r.id}</strong></td>
-                        <td><span class="status-badge bg-${r.status}">${r.status === 'never' ? 'Offline' : r.status}</span></td>
-                        <td>${Math.floor(r.seconds / 3600)}h ${Math.floor((r.seconds % 3600) / 60)}m</td>
-                        <td class="text-end text-muted small">${r.lastSeen ? r.lastSeen.toLocaleTimeString() : "---"}</td>
-                    </tr>
-                `).join('');
-                window.currentTableData = tableData;
-            }
         }
+
+        window.render = () => {
+            const selectedDate = document.getElementById('historyDate').value; // e.g. 2026-01-08
+            const searchTerm = document.getElementById('nameSearch').value.toLowerCase();
+            const filterStatus = document.getElementById('statusFilter').value;
+            const now = new Date();
+            
+            const tableData = registeredStaff.map(staff => {
+                // Connection Logic: StaffID + Date
+                const record = attendanceRecords.find(r => r.docId === `${staff.id}_${selectedDate}`);
+                let status = record ? record.status : "never";
+                let lastSeen = record?.lastUpdate ? record.lastUpdate.toDate() : null;
+                
+                // Auto-offline logic (5 mins)
+                if (status === "active" && lastSeen && (now - lastSeen) > 300000) status = "offline";
+                
+                return { id: staff.id, status, seconds: record ? record.totalSeconds : 0, lastSeen };
+            }).filter(item => {
+                const matchName = item.id.toLowerCase().includes(searchTerm);
+                const matchStatus = !filterStatus || item.status === filterStatus;
+                return matchName && matchStatus;
+            });
+
+            document.getElementById('activeCount').innerText = tableData.filter(r => r.status === 'active').length;
+            document.getElementById('lastSyncGlobal').innerText = new Date().toLocaleTimeString();
+            
+            document.getElementById('attendanceTable').innerHTML = tableData.map(r => `
+                <tr>
+                    <td><strong>${r.id}</strong></td>
+                    <td><span class="status-badge bg-${r.status}">${r.status}</span></td>
+                    <td>${Math.floor(r.seconds / 3600)}h ${Math.floor((r.seconds % 3600) / 60)}m</td>
+                    <td class="text-end text-muted small">${r.lastSeen ? r.lastSeen.toLocaleTimeString() : "---"}</td>
+                </tr>
+            `).join('');
+            window.currentTableData = tableData;
+        };
 
         window.addNewStaff = async () => {
             const id = document.getElementById('newStaffID').value.trim();
-            const limit = parseInt(document.getElementById('shiftLimitSelect').value);
             if(id) {
-                await setDoc(doc(db, "settings", id), { shiftLimit: limit });
+                await setDoc(doc(db, "settings", id), { shiftLimit: 32400 });
                 alert("Staff Added!");
-                location.reload();
+                document.getElementById('newStaffID').value = "";
             }
         };
 
         window.downloadFilteredCSV = () => {
-            let csv = "ID,Status,Time(Sec),LastSeen\n";
-            window.currentTableData.forEach(r => {
-                csv += `${r.id},${r.status},${r.seconds},${r.lastSeen ? r.lastSeen.toLocaleString() : "N/A"}\n`;
-            });
+            let csv = "ID,Status,Seconds,LastSeen\n";
+            window.currentTableData.forEach(r => csv += `${r.id},${r.status},${r.seconds},${r.lastSeen}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = "Report.csv";
-            a.click();
+            a.href = url; a.download = `Report_${document.getElementById('historyDate').value}.csv`; a.click();
         };
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
